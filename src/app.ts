@@ -5,13 +5,13 @@ import {
   validatorCompiler,
   ZodTypeProvider,
 } from "fastify-type-provider-zod";
+import cookie from "@fastify/cookie";
 
 export const app = fastify();
 
-app.setValidatorCompiler(validatorCompiler);
-app.setSerializerCompiler(serializerCompiler);
+app.register(cookie);
 
-app.withTypeProvider<ZodTypeProvider>().register(usersRoutes, {
+app.register(usersRoutes, {
   prefix: "users",
 });
 
