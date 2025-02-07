@@ -4,8 +4,8 @@ export async function checkUserLogin(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const sessionUserId = request.cookies.sessionId;
-  if (!sessionUserId) {
+  const userId = request.cookies.userId;
+  if (!userId) {
     reply.code(401).send({
       message: "Unauthorized.",
       error: true,

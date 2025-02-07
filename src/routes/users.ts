@@ -1,9 +1,9 @@
 import { FastifyInstance } from "fastify";
-import { z } from "zod";
-import { hashPassword, verifyPassword } from "../utils/hash";
+import { hashPassword } from "../utils/hash";
 import { knex } from "../database";
 import { randomUUID } from "node:crypto";
 import { createUserBodySchema } from "../schemas/users";
+import { checkUserLogin } from "../middlewares/check-user-login";
 
 export async function usersRoutes(app: FastifyInstance) {
   //Create user
@@ -51,46 +51,22 @@ export async function usersRoutes(app: FastifyInstance) {
     }
   });
 
-  //Login User
-  app.post("/auth", async (request, reply) => {
-    try {
-      const { email, password } = createUserBodySchema.parse(request.body);
+  app.get("/", { preHandler: [checkUserLogin] }, async (request, reply) => {
+    const userId = request.cookies.userId;
 
-      const findUser = await knex("users")
-        .where({
-          email: email,
-        })
-        .first();
+    const user = await knex("users")
+      .where({
+        id: userId,
+      })
+      .first()
+      .returning("*");
 
-      if (!findUser) {
-        return reply.code(404).send({
-          message: "User does not exist.",
-          error: true,
-          success: false,
-        });
-      }
-
-      const checkPassword = verifyPassword({
-        candidatePassword: password,
-        salt: findUser.salt,
-        hash: findUser.password,
-      });
-
-      if (checkPassword) {
-        reply;
-      }
-    } catch (error) {
-      reply.code(500).send({
-        message: error,
-        error: true,
-        success: false,
+    if (user) {
+      reply.code(201).send({
+        user: user,
+        error: false,
+        success: true,
       });
     }
-  });
-
-  app.get("/", async (request, reply) => {
-    reply.code(200).send({
-      teste: "ok",
-    });
   });
 }
